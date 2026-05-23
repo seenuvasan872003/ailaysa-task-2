@@ -109,7 +109,12 @@ export function useEditor() {
           }),
         }
       );
-      if (!response.ok) throw new Error(`API error ${response.status}`);
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Gemini AI API rate limit exceeded (429). Please wait a moment or configure your own NEXT_PUBLIC_GEMINI_API_KEY in a .env.local file.");
+        }
+        throw new Error(`API error ${response.status}`);
+      }
       const data = await response.json();
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
       setTargetText(text.trim());

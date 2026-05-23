@@ -18,4 +18,4 @@ export const LANGUAGES: Language[] = [
   { code: "bn", label: "Bengali", native: "বাংলা", flag: "🇧🇩" },
 ];
 
-export const GEMINI_API_KEY = "AIzaSyBj4YKDK8RaJ_tt0j1NtG3AYIr26fko004";
+export const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "AIzaSyBj4YKDK8RaJ_tt0j1NtG3AYIr26fko004";
