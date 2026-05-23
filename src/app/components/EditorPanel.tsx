@@ -107,7 +107,7 @@ export function EditorPanel({
         ) : (
           <>
             {/* Segment highlight banner */}
-            {isTarget && segments.length > 1 && highlightedSegmentIdx !== null && (
+            {isTarget && segments.length > 1 && highlightedSegmentIdx !== null && highlightedSegmentIdx !== undefined && (
               <SegmentBanner
                 text={segments[highlightedSegmentIdx]?.text ?? ""}
                 idx={highlightedSegmentIdx}
@@ -210,9 +210,9 @@ export function EditorPanel({
             <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: 1, color: "var(--text-muted)", fontSize: "12px" }}>
               <AlignLeft size={12} />
               {segments.length} segment{segments.length !== 1 ? "s" : ""}
-              {activeSegmentIdx !== null && (
+              {activeSegmentIdx !== null && activeSegmentIdx !== undefined && (
                 <span className="badge" style={{ marginLeft: "4px" }}>
-                  §{(activeSegmentIdx ?? 0) + 1} highlighted
+                  §{activeSegmentIdx + 1} highlighted
                 </span>
               )}
             </div>
