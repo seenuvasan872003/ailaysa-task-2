@@ -108,13 +108,13 @@ export function Header({
           active={activeTab === "editor"}
           onClick={() => onTabChange("editor")}
         />
-        <TabButton
+        {/* <TabButton
           label="Masala Packet"
           icon={<Flame size={13} />}
           active={activeTab === "masala"}
           onClick={() => onTabChange("masala")}
           spicy
-        />
+        /> */}
       </nav>
 
       <div style={{ width: "1px", height: "22px", background: "var(--divider)", flexShrink: 0 }} />
