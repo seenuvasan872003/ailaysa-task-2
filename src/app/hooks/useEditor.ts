@@ -89,40 +89,62 @@ export function useEditor() {
     const tgtLang = LANGUAGES.find((l) => l.code === targetLang);
     setTranslating(true);
     setTranslateError("");
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: `Translate the following text from ${srcLang?.label} (${srcLang?.native}) to ${tgtLang?.label} (${tgtLang?.native}). Return ONLY the translated text, no explanations, no quotes, no preamble:\n\n${sourceText}`,
-                  },
-                ],
-              },
-            ],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 2048 },
-          }),
+    const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
+    let success = false;
+    let finalError = "";
+
+    for (const model of models) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: `Translate the following text from ${srcLang?.label} (${srcLang?.native}) to ${tgtLang?.label} (${tgtLang?.native}). Return ONLY the translated text, no explanations, no quotes, no preamble:\n\n${sourceText}`,
+                    },
+                  ],
+                },
+              ],
+              generationConfig: { temperature: 0.3, maxOutputTokens: 2048 },
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error(`Rate limit exceeded on ${model} (429)`);
+          }
+          throw new Error(`API error ${response.status} on ${model}`);
         }
-      );
-      if (!response.ok) {
-        if (response.status === 429) {
-          throw new Error("Gemini AI API rate limit exceeded (429). Please wait a moment or configure your own NEXT_PUBLIC_GEMINI_API_KEY in a .env.local file.");
+
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+        if (text) {
+          setTargetText(text.trim());
+          success = true;
+          break;
         }
-        throw new Error(`API error ${response.status}`);
+      } catch (err) {
+        console.warn(`Translation attempt with ${model} failed:`, err);
+        finalError = err instanceof Error ? err.message : "Translation failed";
       }
-      const data = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      setTargetText(text.trim());
-    } catch (err) {
-      setTranslateError(err instanceof Error ? err.message : "Translation failed");
-    } finally {
-      setTranslating(false);
     }
+
+    if (!success) {
+      if (finalError.includes("429")) {
+        setTranslateError(
+          "Gemini AI API rate limit exceeded (429) on all fallback models. Please wait a moment or configure your own NEXT_PUBLIC_GEMINI_API_KEY in a .env.local file."
+        );
+      } else {
+        setTranslateError(finalError || "Translation failed. Please try again.");
+      }
+    }
+    setTranslating(false);
   }, [sourceText, sourceLang, targetLang]);
 
   // ── Swap languages ──
